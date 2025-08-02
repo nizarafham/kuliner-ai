@@ -1,5 +1,5 @@
 // app/account/page.tsx
-import MainApp from '../components/MainApp'
+import AuthForm from '../components/AuthForm'
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
@@ -31,7 +31,7 @@ export default async function AccountPage() {
   } = await supabase.auth.getSession()
 
   if (!session) {
-    redirect('/')
+    return <AuthForm />
   }
 
   const handleLogout = async () => {
@@ -63,9 +63,12 @@ export default async function AccountPage() {
         <>
           <header className="flex justify-between items-center mb-6">
             <div className="flex items-center space-x-6">
-                <h1 className="text-3xl font-bold">Cari Resep</h1>
+                <h1 className="text-3xl font-bold">Akun Saya</h1>
                 <Link href="/history" className="text-blue-500 hover:underline pt-1">
                     Riwayat Pencarian
+                </Link>
+                <Link href="/" className="text-blue-500 hover:underline pt-1">
+                    Cari Resep
                 </Link>
             </div>
             <form action={handleLogout}>
@@ -77,7 +80,9 @@ export default async function AccountPage() {
               </button>
             </form>
           </header>
-          <MainApp />
+          <div>
+            <p>Selamat datang! Anda sudah masuk ke akun Anda.</p>
+          </div>
         </>
     </div>
   )

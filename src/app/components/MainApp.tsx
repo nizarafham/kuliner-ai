@@ -1,5 +1,8 @@
+// src/app/components/MainApp.tsx
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { createClient } from '@/utils/supabase/client'
+import type { Session } from '@supabase/supabase-js'
 
 interface Recipe {
   recipeName: string
@@ -18,6 +21,19 @@ export default function MainApp() {
   const [province, setProvince] = useState('Semua')
   const [recipe, setRecipe] = useState<Recipe | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
+
+  const supabase = createClient()
+
+  useEffect(() => {
+    const getSession = async () => {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session)
+    }
+    getSession();
+  }, [supabase.auth])
+
+
 
   const handleSearch = async () => {
     setLoading(true)
@@ -53,17 +69,19 @@ export default function MainApp() {
       const recipeData: Recipe = await generateResponse.json()
       setRecipe(recipeData)
 
-      // 3. Save to history
-      await fetch('/api/history', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ingredient,
-          province,
-          recipeName: recipeData.recipeName,
-          recipeResult: recipeData,
-        }),
-      })
+      // 3. Save to history if logged in
+      if(session){
+        await fetch('/api/history', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              ingredient,
+              province,
+              recipeName: recipeData.recipeName,
+              recipeResult: recipeData,
+            }),
+          })
+      }
     } catch (err: any) {
       setError(err.message || 'Terjadi kesalahan.')
     } finally {
@@ -78,7 +96,7 @@ export default function MainApp() {
           type="text"
           value={ingredient}
           onChange={(e) => setIngredient(e.target.value)}
-          placeholder="Contoh: Ayam"
+          placeholder="Contoh: Ayam, Cabe, Kecap"
           className="p-2 border rounded md:col-span-1"
         />
         <select

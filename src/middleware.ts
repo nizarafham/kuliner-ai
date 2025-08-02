@@ -1,3 +1,4 @@
+// src/middleware.ts
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
@@ -58,10 +59,6 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (user && request.nextUrl.pathname === '/') {
-    return NextResponse.redirect(new URL('/account', request.url))
-  }
-
   if (!user && request.nextUrl.pathname !== '/') {
     return NextResponse.redirect(new URL('/', request.url))
   }
@@ -70,5 +67,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/', '/account', '/history'],
+  matcher: ['/account', '/history'],
 }
