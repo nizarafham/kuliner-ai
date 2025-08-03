@@ -1,17 +1,16 @@
 'use client'
+
 import { useState } from 'react'
 import { createClient } from '@/utils/supabase/client'
+import HistoryItem from './HistoryItem'
+import type { History } from '@/types' 
 
-type History = {
-  id: string
-  created_at: string
-  ingredient: string
-  province: string
-  recipe_name: string
-  recipe_result: any
-  user_id: string
-}
+// --- Komponen Ikon ---
+const BookOpenIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+)
 
+// --- Komponen Utama ---
 export default function HistoryList({ initialHistories }: { initialHistories: History[] }) {
   const supabase = createClient()
   const [histories, setHistories] = useState(initialHistories)
@@ -19,11 +18,10 @@ export default function HistoryList({ initialHistories }: { initialHistories: Hi
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [newName, setNewName] = useState('')
 
-  const toggleExpanded = (id: string) => {
-    setExpandedId(expandedId === id ? null : id)
-  }
-
   const handleDelete = async (id: string) => {
+    if (!window.confirm('Apakah Anda yakin ingin menghapus riwayat ini?')) {
+        return;
+    }
     const { error } = await supabase.from('histories').delete().match({ id })
     if (error) {
       alert('Gagal menghapus riwayat.')
@@ -31,11 +29,6 @@ export default function HistoryList({ initialHistories }: { initialHistories: Hi
     } else {
       setHistories(histories.filter((h) => h.id !== id))
     }
-  }
-
-  const handleEdit = (history: History) => {
-    setEditingId(history.id)
-    setNewName(history.recipe_name)
   }
 
   const handleSave = async (id: string) => {
@@ -55,81 +48,36 @@ export default function HistoryList({ initialHistories }: { initialHistories: Hi
     }
   }
 
+  if (histories.length === 0) {
+    return (
+      <div className="text-center py-16 px-6 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
+        <BookOpenIcon className="mx-auto h-12 w-12 text-gray-400" />
+        <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">Riwayat Kosong</h3>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Anda belum pernah mencari resep. Mulai cari sekarang!</p>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
-      {histories.length === 0 ? (
-        <p>Anda belum memiliki riwayat pencarian.</p>
-      ) : (
-        <ul className="divide-y divide-gray-200">
-          {histories.map((history) => (
-            <li key={history.id} className="p-4 flex flex-col md:flex-row justify-between items-start md:items-center">
-              <div className="flex-1 mb-4 md:mb-0 w-full">
-                {editingId === history.id ? (
-                  <input
-                    type="text"
-                    value={newName}
-                    onChange={(e) => setNewName(e.target.value)}
-                    className="p-2 border rounded w-full"
-                  />
-                ) : (
-                  <h3 className="text-xl font-semibold">{history.recipe_name}</h3>
-                )}
-                <p className="text-sm text-gray-600">
-                  Bahan: {history.ingredient} | Daerah: {history.province}
-                </p>
-                <p className="text-xs text-gray-400">
-                  Dicari pada: {new Date(history.created_at).toLocaleString()}
-                </p>
-
-                {expandedId === history.id && (
-                  <div className="mt-4 p-4 bg-gray-100 rounded text-sm w-full">
-                    <p className="font-semibold mb-1">Bahan yang dibutuhkan:</p>
-                    <ul className="list-disc list-inside mb-2">
-                      {(history.recipe_result?.ingredients || []).map((item: string, idx: number) => (
-                        <li key={idx}>{item}</li>
-                      ))}
-                    </ul>
-                    <p className="font-semibold mb-1">Langkah-langkah:</p>
-                    <ol className="list-decimal list-inside">
-                      {(history.recipe_result?.steps || []).map((step: string, idx: number) => (
-                        <li key={idx}>{step}</li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-col space-y-2 md:space-y-0 md:flex-row md:space-x-2">
-                <button
-                  onClick={() => toggleExpanded(history.id)}
-                  className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 rounded text-sm"
-                >
-                  {expandedId === history.id ? 'Sembunyikan Detail' : 'Lihat Detail'}
-                </button>
-                {editingId === history.id ? (
-                  <>
-                    <button onClick={() => handleSave(history.id)} className="bg-green-500 hover:bg-green-700 text-white font-bold py-1 px-3 rounded text-sm">
-                      Simpan
-                    </button>
-                    <button onClick={() => setEditingId(null)} className="bg-gray-500 hover:bg-gray-700 text-white font-bold py-1 px-3 rounded text-sm">
-                      Batal
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <button onClick={() => handleEdit(history)} className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-3 rounded text-sm">
-                      Ubah
-                    </button>
-                    <button onClick={() => handleDelete(history.id)} className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-sm">
-                      Hapus
-                    </button>
-                  </>
-                )}
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      {histories.map((history) => (
+        <HistoryItem
+            key={history.id}
+            history={history}
+            isEditing={editingId === history.id}
+            isExpanded={expandedId === history.id}
+            newName={newName}
+            setNewName={setNewName}
+            onToggleExpand={() => setExpandedId(expandedId === history.id ? null : history.id)}
+            onEdit={() => {
+                setEditingId(history.id);
+                setNewName(history.recipe_name);
+            }}
+            onSave={() => handleSave(history.id)}
+            onCancel={() => setEditingId(null)}
+            onDelete={() => handleDelete(history.id)}
+        />
+      ))}
     </div>
   )
 }
