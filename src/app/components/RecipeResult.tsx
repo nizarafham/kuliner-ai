@@ -1,7 +1,8 @@
 'use client'
 
 import RecipeDisplay from './RecipeDisplay'
-import RecipePlaceholder from './RecipePlaceHolder'
+import RecipePlaceholder from './RecipePlaceholder'
+
 
 interface Recipe {
   recipeName: string

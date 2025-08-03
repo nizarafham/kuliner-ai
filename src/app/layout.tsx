@@ -23,6 +23,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
+      <head>
+        {/* Tambahkan link favicon di sini */}
+        <link rel="icon" href="/logos.png" type="image/png" />
+      </head>
       <body
         className={`font-sans ${inter.variable} bg-background text-foreground`}
       >
