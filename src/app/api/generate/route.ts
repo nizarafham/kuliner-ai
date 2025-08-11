@@ -1,35 +1,36 @@
 import { NextResponse } from 'next/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { z } from 'zod'
+import { env } from '../../../utils/env'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!)
+const Body = z.object({
+  ingredient: z.string().min(2, 'Bahan terlalu pendek'),
+  province: z.string().default('Semua')
+})
 
-export async function POST(request: Request) {
-  try {
-    const { ingredient, province } = await request.json()
+const genAI = new GoogleGenerativeAI(env.GEMINI_API_KEY!)
 
-    if (!ingredient || !province) {
-      return NextResponse.json({ error: 'Ingredient and province are required' }, { status: 400 })
-    }
-
+export async function POST(req: Request){
+  try{
+    const { ingredient, province } = Body.parse(await req.json())
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' })
     const provinceQuery = province === 'Semua' ? 'Indonesia' : province
-    const prompt = `Berikan satu resep masakan khas dari ${provinceQuery} berbahan dasar ${ingredient}. Jika tidak ada, berikan resep umum dari Indonesia. Format jawaban sebagai JSON object dengan key: "recipeName", "ingredients" (sebuah array string, masing-masing item berisi takaran untuk 2 porsi), dan "steps" (sebuah array string).`
 
-    const result = await model.generateContent(prompt)
-    const response = await result.response
-    const text = response.text().replace(/```json/g, '').replace(/```/g, '');
+    const prompt = `Berikan satu resep masakan khas dari ${provinceQuery} berbahan dasar ${ingredient}. Jika tidak ada, berikan resep umum Indonesia.
+Outputkan *hanya* JSON dengan keys: recipeName (string), ingredients (string[]; tiap item sudah mengandung takaran realistis untuk 2 porsi), steps (string[]).
+Jangan sertakan markdown, penjelasan, atau teks lain di luar JSON.`
 
+    const res = await model.generateContent(prompt)
+    const raw = res.response.text()
+    const jsonStr = raw.replace(/```json/gi,'').replace(/```/g,'').trim()
 
-    try {
-        const recipeJson = JSON.parse(text);
-        return NextResponse.json(recipeJson);
-    } catch (e) {
-        console.error("Failed to parse Gemini's response as JSON:", text);
-        return NextResponse.json({ error: "Failed to get a valid recipe format." }, { status: 500 });
+    let data: unknown
+    try{ data = JSON.parse(jsonStr) }catch{
+      return NextResponse.json({ error: 'Format resep tidak valid, coba lagi.' }, { status: 502 })
     }
 
-  } catch (error) {
-    console.error('Error in generation API:', error)
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json(data)
+  }catch(err: any){
+    return NextResponse.json({ error: err?.message ?? 'Gagal memproses permintaan.' }, { status: 400 })
   }
 }
