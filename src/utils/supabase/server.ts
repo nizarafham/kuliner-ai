@@ -16,3 +16,5 @@ export function createSupabaseServer(){
     }
   )
 }
+
+export { createServerClient }

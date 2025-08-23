@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/utils/supabase/client'
+import { createSupabaseClient } from '@/utils/supabase/client'
 import HistoryItem from './HistoryItem'
 import type { History } from '@/types' 
 
@@ -12,7 +12,7 @@ const BookOpenIcon = (props: React.SVGProps<SVGSVGElement>) => (
 
 // --- Komponen Utama ---
 export default function HistoryList({ initialHistories }: { initialHistories: History[] }) {
-  const supabase = createClient()
+  const supabase = createSupabaseClient()
   const [histories, setHistories] = useState(initialHistories)
   const [editingId, setEditingId] = useState<string | null>(null)
   const [expandedId, setExpandedId] = useState<string | null>(null)

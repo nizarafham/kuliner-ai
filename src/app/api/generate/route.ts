@@ -16,9 +16,16 @@ export async function POST(req: Request){
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' })
     const provinceQuery = province === 'Semua' ? 'Indonesia' : province
 
-    const prompt = `Berikan satu resep masakan khas dari ${provinceQuery} berbahan dasar ${ingredient}. Jika tidak ada, berikan resep umum Indonesia.
-Outputkan *hanya* JSON dengan keys: recipeName (string), ingredients (string[]; tiap item sudah mengandung takaran realistis untuk 2 porsi), steps (string[]).
-Jangan sertakan markdown, penjelasan, atau teks lain di luar JSON.`
+    const prompt = `Berikan satu resep masakan khas Nusantara dari provinsi ${provinceQuery} dengan bahan utama ${ingredient}. Pilih hidangan tradisional yang benar‑benar populer di provinsi tersebut; sebutkan nama masakan sesuai penamaan daerahnya.
+
+    Pastikan resep menggunakan bumbu dan rempah yang lazim dalam kuliner Indonesia (misal bawang merah, bawang putih, lengkuas, serai, daun jeruk) dan teknik memasak yang autentik. Jika tidak ada hidangan lokal yang menggunakan ${ingredient}, berikan resep umum Indonesia yang tetap mencerminkan cita rasa Nusantara.
+
+    Outputkan *hanya* JSON dengan keys: 
+    - recipeName (string), 
+    - ingredients (string[]; tiap item sudah mengandung takaran realistis untuk 2 porsi, jelaskan juga bentuk dan ukuran bahan jika relevan), 
+    - steps (string[]; berisi langkah-langkah memasak yang lengkap, mulai dari menyiapkan bumbu hingga penyajian, dengan urutan kronologis).
+
+    Jangan sertakan markdown, penjelasan, atau teks lain di luar JSON.`
 
     const res = await model.generateContent(prompt)
     const raw = res.response.text()

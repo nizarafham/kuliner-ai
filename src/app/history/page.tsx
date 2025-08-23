@@ -1,10 +1,10 @@
-import { createClient } from '../../utils/supabase/server'
+import { createSupabaseServer } from '../../utils/supabase/server'
 import HistoryList from '../components/HistoryList'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 export default async function HistoryPage() {
-  const supabase = await createClient()
+  const supabase = createSupabaseServer()
 
   const {
     data: { user },

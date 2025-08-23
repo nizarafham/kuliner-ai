@@ -2,7 +2,7 @@
 'use client'
 import { Auth } from '@supabase/auth-ui-react'
 import { ThemeSupa } from '@supabase/auth-ui-shared'
-import { createClient } from '@/utils/supabase/client'
+import { createSupabaseClient } from '@/utils/supabase/client'
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import type { ViewType } from '@supabase/auth-ui-shared'
@@ -12,7 +12,7 @@ interface AuthFormProps {
 }
 
 export default function AuthForm({ viewType = 'sign_in' }: AuthFormProps) {
-  const supabase = createClient()
+  const supabase = createSupabaseClient()
   const router = useRouter()
   const [loading, setLoading] = useState(false)
 
